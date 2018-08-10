@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 import util.EncryptedString;
 import util.Metadata;
-import util.SeializableMessage;
+import util.SerializableMessage;
 
 /*
  * Der Server ist die Zentrale des LanChats. Hier werden alle Empfangenen Nachrichten weitergeleitet.
@@ -29,7 +29,7 @@ public class Server {
 	 * Sendet ein Broadcast an alle verbundenen Clients.Diese Broadcasts sind in den
 	 * meisten Fällen die Nachrichten von anderen Clients.
 	 */
-	private void sendBroadcastToClients(SeializableMessage messageToBroadcast) {
+	private void sendBroadcastToClients(SerializableMessage messageToBroadcast) {
 		System.out.println("\t\t[SERVER] Sending Broadcast");
 		for (Socket socket : connectedClients) {
 			try {
@@ -51,7 +51,7 @@ public class Server {
 	 * Wartet auf eine Nachricht vom jeweiligen Client. Wird eine Nachricht
 	 * empfangen, wird sie an alle verbundenen Clients weitergeleitet.
 	 */
-	private SeializableMessage acceptClientMessage(Socket remoteClient) {
+	private SerializableMessage acceptClientMessage(Socket remoteClient) {
 		try {
 			ObjectInputStream ois = null;
 			int sleepTimeInS = 2;
@@ -65,19 +65,13 @@ public class Server {
 					Thread.sleep(sleepTimeInS * 1000);
 				}
 			} while (ois == null);
-
-			while (true) {
-				SeializableMessage message = (SeializableMessage) ois.readObject();
-				if (message != null) {
-					return message;
-				}
-				Thread.sleep(10);
-			}
+			return (SerializableMessage) ois.readObject();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -93,7 +87,7 @@ public class Server {
 			@Override
 			public void run() {
 				while (true) {
-					SeializableMessage message = acceptClientMessage(remoteClient);
+					SerializableMessage message = acceptClientMessage(remoteClient);
 					System.out.println("\t\t[CLIENT HANDLER: " + remoteClient.getInetAddress() + "] Message recived");
 					if (message.getMetadata().getMessageType() == Metadata.TEXT) {
 						EncryptedString text = (EncryptedString) message.getMessage();

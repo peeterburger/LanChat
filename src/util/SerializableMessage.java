@@ -5,7 +5,7 @@ import java.io.Serializable;
 /*
  * Kombiniert eine Nachricht mit den dazugehörigen Metadaten
  */
-public class SeializableMessage implements Serializable {
+public class SerializableMessage implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private Object message;
@@ -24,7 +24,7 @@ public class SeializableMessage implements Serializable {
 		return "SeializableMessage";
 	}
 
-	public SeializableMessage(Object message) {
+	public SerializableMessage(Object message) {
 		this.message = message;
 		this.metadata = new Metadata(message);
 	}
