@@ -5,7 +5,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
 
+import util.Debugger;
 import util.EncryptedString;
 import util.SerializableMessage;
 
@@ -35,25 +37,19 @@ public class Client {
 
 				try {
 					int sleepTimeInS = 2;
-					while (true) { // Überprüft, ob ein Broadcast vom Server erhalten wurde
-						SerializableMessage message = null;
-						do {
-							try {
-								message = (SerializableMessage) ois.readObject();
-							} catch (SocketException e) {
-								System.out.println("Server unreachable. Trying again in " + sleepTimeInS + " sec");
-								Thread.sleep(sleepTimeInS * 1000);
-								sleepTimeInS *= 2;
-							}
-						} while (message == null);
-						System.out.println(message.getMessage());
-						Thread.sleep(10); // Timeout zwischen den einzelnen Überprüfungen
-					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
+					SerializableMessage message = null;
+					do {
+						try {
+							message = (SerializableMessage) ois.readObject();
+						} catch (SocketException e) {
+							Debugger.println(0, "LOCAL", new Date().toString(),
+									"Server unreachable. Trying again in " + sleepTimeInS + " sec");
+							Thread.sleep(sleepTimeInS * 1000);
+							sleepTimeInS *= 2;
+						}
+					} while (message == null);
+					Debugger.println(0, "REMOTE", new Date().toString(), message.getMessage().toString());
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}

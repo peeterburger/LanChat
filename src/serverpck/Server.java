@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 
+import util.Debugger;
 import util.EncryptedString;
 import util.Metadata;
 import util.SerializableMessage;
@@ -30,17 +31,12 @@ public class Server {
 	 * meisten Fällen die Nachrichten von anderen Clients.
 	 */
 	private void sendBroadcastToClients(SerializableMessage messageToBroadcast) {
-		System.out.println("\t\t[SERVER] Sending Broadcast");
+		Debugger.println(3, "SERVER", null, "Sending Broadcast");
 		for (Socket socket : connectedClients) {
 			try {
 				ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
 				oos.writeObject(messageToBroadcast);
-				System.out.print("\t\t\t[BROADCAST TO: " + socket.getInetAddress() + "] ");
-
-				if (messageToBroadcast.getMetadata().getMessageType() == Metadata.TEXT) {
-					EncryptedString text = (EncryptedString) messageToBroadcast.getMessage();
-					System.out.println("Type: TEXT; Value: " + text.decrypt());
-				}
+				Debugger.println(4, "SERVER", socket.getInetAddress().toString(), "Foreward last Message");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -59,19 +55,14 @@ public class Server {
 				try {
 					ois = new ObjectInputStream(remoteClient.getInputStream());
 				} catch (SocketException e) {
-					System.out.println("\t\t[CLIENT HANDLER: " + remoteClient.getInetAddress()
-							+ "] Connection Timed Out... Trying again in " + sleepTimeInS + " sec");
+					Debugger.println(2, "CLIENT HANDLER", remoteClient.getInetAddress().toString(),
+							"Connection Timed Out... Trying again in " + sleepTimeInS + " sec");
 					sleepTimeInS *= 2;
 					Thread.sleep(sleepTimeInS * 1000);
 				}
 			} while (ois == null);
 			return (SerializableMessage) ois.readObject();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
@@ -81,18 +72,18 @@ public class Server {
 	 * Leitet empfangene Nachrichten an alle verbundenen Clients weitergeleitet.
 	 */
 	private void handleConnection(Socket remoteClient) {
-		System.out.println("\t\t[CLIENT HANDLER: " + remoteClient.getInetAddress() + "] handling connection on "
-				+ remoteClient.getInetAddress());
+		Debugger.println(2, "CLIENT HANDLER", remoteClient.getInetAddress().toString(),
+				"handling connection from " + remoteClient.getInetAddress().toString());
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				while (true) {
 					SerializableMessage message = acceptClientMessage(remoteClient);
-					System.out.println("\t\t[CLIENT HANDLER: " + remoteClient.getInetAddress() + "] Message recived");
+					Debugger.println(2, "CLIENT HANDLER", remoteClient.getInetAddress().toString(), "Message recived");
 					if (message.getMetadata().getMessageType() == Metadata.TEXT) {
 						EncryptedString text = (EncryptedString) message.getMessage();
-						System.out.println("\t\t\t[MESSAGE: " + remoteClient.getInetAddress() + "] Type: TEXT; Value: "
-								+ text.decrypt());
+						Debugger.println(3, "MESSAGE", remoteClient.getInetAddress().toString(),
+								"Type: TEXT; Value: " + text.decrypt());
 						sendBroadcastToClients(message);
 					}
 				}
@@ -104,8 +95,8 @@ public class Server {
 	 * Startet den Server und wartet auf neue Verbindungen
 	 */
 	public void start() {
-		System.out.println("[SERVER] Server started");
-		System.out.println("\t[ACCEPTION HANDLER] Waiting for clients to accept");
+		Debugger.println(0, "SERVER", null, "Server started");
+		Debugger.println(1, "ACCEPTION HANDLER", null, "Waiting for clients to accept");
 
 		new Thread(new Runnable() {
 			@Override
@@ -113,7 +104,8 @@ public class Server {
 				while (true) {
 					try {
 						Socket acceptedClient = localServerSocket.accept();
-						System.out.println("\t[ACCEPTION HANDLER] Client accepted: " + acceptedClient.getInetAddress());
+						Debugger.println(1, "ACCEPTION HANDLER", null,
+								"Client accepted: " + acceptedClient.getInetAddress());
 						connectedClients.add(acceptedClient);
 						handleConnection(acceptedClient);
 					} catch (IOException e) {
@@ -125,8 +117,8 @@ public class Server {
 	}
 
 	/*
-	 * Konstruktor, um eine Server-Instanz zu erzeugen. Es muss ein ServerSocket übergeben
-	 * werden. Der Server wird noch nicht gestartet.
+	 * Konstruktor, um eine Server-Instanz zu erzeugen. Es muss ein ServerSocket
+	 * übergeben werden. Der Server wird noch nicht gestartet.
 	 */
 	public Server(ServerSocket localServerSocket) {
 		this.localServerSocket = localServerSocket;
