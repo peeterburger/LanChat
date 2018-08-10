@@ -21,7 +21,7 @@ public class Server {
 				try {
 					ois = new ObjectInputStream(remoteClient.getInputStream());
 				}catch(SocketException e) {
-					System.out.println("Connection Timed Out... Trying again in " + sleepTimeInS + " sec");
+					System.out.println("\t\t[CLIENT HANDLER: " + remoteClient.getInetAddress() + "] Connection Timed Out... Trying again in "  + sleepTimeInS + " sec");
 					sleepTimeInS *= 2;
 					Thread.sleep(sleepTimeInS * 1000);
 				}
@@ -54,7 +54,7 @@ public class Server {
 					System.out.println("\t\t[CLIENT HANDLER: " + remoteClient.getInetAddress() + "] Message recived");
 					if(message.getMetadata().getMessageType() == Metadata.TEXT) {
 						EncryptedString text = (EncryptedString)message.getMessage();
-						System.out.println(text.decrypt());
+						System.out.println("\t\t\t[MESSAGE: " + remoteClient.getInetAddress() + "] Type: TEXT; Value: " + text.decrypt());
 					}
 				}
 			}
