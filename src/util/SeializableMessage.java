@@ -2,6 +2,9 @@ package util;
 
 import java.io.Serializable;
 
+/*
+ * Kombiniert eine Nachricht mit den dazugehörigen Metadaten
+ */
 public class SeializableMessage implements Serializable {
 	private static final long serialVersionUID = 1L;
 

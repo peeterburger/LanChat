@@ -2,6 +2,9 @@ package util;
 
 import java.io.Serializable;
 
+/*
+ * Enthällt Metadaten einer Nachricht
+ */
 public class Metadata implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
@@ -14,6 +17,9 @@ public class Metadata implements Serializable {
 		return this.messageType;
 	}
 
+	/*
+	 * Ermittelt automatisch die Metadaten einer Nachricht
+	 */
 	public Metadata(Object message) {
 		if (message.toString().equals("EncryptedString")) {
 			this.messageType = TEXT;
