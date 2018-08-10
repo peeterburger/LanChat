@@ -1,20 +1,24 @@
 package clientpck;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.SocketException;
-import java.util.Date;
+import java.util.Observable;
+import java.util.Observer;
 
-import util.Debugger;
+import clientevents.BroadcastListener;
 import util.EncryptedString;
 import util.SerializableMessage;
 
 /*
  * Ein Client kann sich mit dem Server schicken und mit anderen Clients (über den Server) kommunizieren
  */
-public class Client {
+public class Client implements Observer{
+	@Override
+	public void update(Observable o, Object arg) {
+		System.out.println("update");	
+	}
+	
 	/*
 	 * Der Socket des Clients, mit dem er mit dem Server kommuniziert
 	 */
@@ -25,35 +29,7 @@ public class Client {
 	 * in den meisten Fällen die Nachrichten von anderen Clients.
 	 */
 	private void listenForServerBroadcast() {
-		new Thread(new Runnable() { // Startet eine neuen Thread, damit der Client parallel weiterlaufen kann.
-			@Override
-			public void run() {
-				ObjectInputStream ois = null; // Es wird ein ObjectInputStream vom lokalen Socket erzeugt.
-				try {
-					ois = new ObjectInputStream(localClientSocket.getInputStream());
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-
-				try {
-					int sleepTimeInS = 2;
-					SerializableMessage message = null;
-					do {
-						try {
-							message = (SerializableMessage) ois.readObject();
-						} catch (SocketException e) {
-							Debugger.println(0, "LOCAL", new Date().toString(),
-									"Server unreachable. Trying again in " + sleepTimeInS + " sec");
-							Thread.sleep(sleepTimeInS * 1000);
-							sleepTimeInS *= 2;
-						}
-					} while (message == null);
-					Debugger.println(0, "REMOTE", new Date().toString(), message.getMessage().toString());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}).start();
+		new BroadcastHandler(localClientSocket).start();
 	}
 
 	/*
@@ -77,6 +53,15 @@ public class Client {
 	 * gewartet
 	 */
 	public Client(Socket localClientSocket) {
+		BroadcastListener bcl = new BroadcastListener();
+		bcl.addObserver(this);
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				bcl.listenBroadcast(localClientSocket);
+			}
+		}).start();
+
 		this.localClientSocket = localClientSocket;
 		this.listenForServerBroadcast();
 	}
@@ -89,4 +74,5 @@ public class Client {
 		client.sendMessage(new SerializableMessage(new EncryptedString("lol")));
 		Thread.sleep(5000);
 	}
+
 }
